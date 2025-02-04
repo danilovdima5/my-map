@@ -5,7 +5,6 @@ import { provideExperimentalZonelessChangeDetection } from '@angular/core';
 
 describe(AppComponent.name, () => {
   let fixture: ComponentFixture<AppComponent>;
-  let component: AppComponent;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -14,8 +13,6 @@ describe(AppComponent.name, () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppComponent);
-
-    component = fixture.componentInstance;
 
     fixture.detectChanges();
   });
