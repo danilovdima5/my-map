@@ -17,11 +17,11 @@ describe(AppComponent.name, () => {
     fixture.detectChanges();
   });
 
-  it('should render h1 Hello, world', () => {
+  it('should render router-outlet', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
-    const queryH1 = compiled.querySelector('h1');
+    const queryRouterOutlet = compiled.querySelectorAll('router-outlet');
 
-    expect(queryH1?.textContent).toContain('Hello, world');
+    expect(queryRouterOutlet.length).toBe(1);
   });
 });
