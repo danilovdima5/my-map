@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
@@ -17,6 +17,7 @@ import { MatFormField, MatInput, MatLabel } from '@angular/material/input';
 
 import { MatButton } from '@angular/material/button';
 import { NgTemplateOutlet } from '@angular/common';
+import { Router } from '@angular/router';
 
 type SigningForm = FormGroup<{
   email: FormControl<string>;
@@ -40,8 +41,12 @@ type SigningForm = FormGroup<{
     class: 'page',
   },
 })
-export class AuthPageComponent {
+export class AuthPageComponent implements OnInit {
   private readonly layoutService = inject(LayoutService);
+
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly router = inject(Router);
 
   readonly cols = toSignal(
     this.layoutService.breakpoints$.pipe(
@@ -63,6 +68,10 @@ export class AuthPageComponent {
 
   readonly signUpForm = AuthPageComponent.getForm();
 
+  ngOnInit(): void {
+    this.signInForm.disable();
+  }
+
   static getForm(): SigningForm {
     const fb = inject(FormBuilder);
 
@@ -76,8 +85,6 @@ export class AuthPageComponent {
         nonNullable: true,
       }),
     });
-
-    form.disable();
 
     return form;
   }
