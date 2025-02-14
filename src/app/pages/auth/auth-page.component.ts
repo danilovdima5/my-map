@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { Breakpoints } from '@angular/cdk/layout';
-import { map } from 'rxjs/operators';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { finalize, map } from 'rxjs/operators';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 import { LayoutService } from '@shared/services/layout/layout.service';
 import {
@@ -14,9 +14,14 @@ import {
 } from '@angular/forms';
 
 import { MatFormField, MatInput, MatLabel } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MatButton } from '@angular/material/button';
 import { NgTemplateOutlet } from '@angular/common';
+import { AuthPageService } from './auth-page.service';
+import { bound } from '@shared/helpers/bound/bound';
+import { FirebaseError } from 'firebase/app';
+import { GlobalLoaderComponent } from '@shared/components/global-loader/global-loader.component';
 
 type SigningForm = FormGroup<{
   email: FormControl<string>;
@@ -35,13 +40,23 @@ type SigningForm = FormGroup<{
     MatInput,
     MatButton,
     NgTemplateOutlet,
+    GlobalLoaderComponent
   ],
   host: {
     class: 'page',
   },
+  providers: [AuthPageService]
 })
-export class AuthPageComponent {
+export class AuthPageComponent implements OnInit {
   private readonly layoutService = inject(LayoutService);
+
+  private readonly authPageService = inject(AuthPageService);
+
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly snackBar = inject(MatSnackBar);
+
+  readonly signUpInProgress = signal(false);
 
   readonly cols = toSignal(
     this.layoutService.breakpoints$.pipe(
@@ -60,8 +75,43 @@ export class AuthPageComponent {
   );
 
   readonly signInForm = AuthPageComponent.getForm();
-
   readonly signUpForm = AuthPageComponent.getForm();
+
+  ngOnInit(): void {
+    this.signInForm.disable();
+  }
+
+  @bound
+  signUp(): void {
+    const { email, password } = this.signUpForm.getRawValue();
+
+    this.signUpInProgress.set(true);
+
+    this.makeRequest(
+      [email, password, 'signUp'],
+      () => {
+        this.signUpInProgress.set(false);
+        this.signUpForm.reset();
+      },
+    );
+  }
+
+  private makeRequest(
+    [email, password, method]: Parameters<typeof this.authPageService.makeRequest>,
+    onComplete: () => void
+  ): void {
+    this.authPageService.makeRequest(email, password, method).pipe(
+      finalize(() => onComplete()),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: () => {
+        this.showSnack('Successfully registered', 'Okay');
+      },
+      error: (error: FirebaseError) => {
+        this.showSnack(error.code.split('/')[1].split('-').join(' '), 'Okay');
+      }
+    })
+  }
 
   static getForm(): SigningForm {
     const fb = inject(FormBuilder);
@@ -77,8 +127,14 @@ export class AuthPageComponent {
       }),
     });
 
-    form.disable();
-
     return form;
+  }
+
+  private showSnack(title: string, button: string): void {
+    this.snackBar.open(title, button, {
+      duration: 5000,
+      verticalPosition: 'bottom',
+      horizontalPosition: 'right'
+    });
   }
 }

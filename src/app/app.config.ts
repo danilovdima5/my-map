@@ -8,6 +8,7 @@ import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { routes } from './app.routes';
 
 import firebaseOptions from '../../firebase.options';
+import { provideAuth, initializeAuth } from '@angular/fire/auth';
 
 const firebaseApp = initializeApp(firebaseOptions);
 
@@ -17,5 +18,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimations(),
     provideFirebaseApp(() => firebaseApp),
+    provideAuth(() => initializeAuth(firebaseApp))
   ],
 };

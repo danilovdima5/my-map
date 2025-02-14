@@ -1,38 +1,30 @@
 <mat-grid-list [cols]="cols()" rowHeight="fit" class="h-100">
   <mat-grid-tile>
-    <ng-container
-      [ngTemplateOutlet]="form"
-      [ngTemplateOutletContext]="{
+    <ng-container [ngTemplateOutlet]="form" [ngTemplateOutletContext]="{
         title: 'Sign In',
         form: signInForm,
-      }"
-    />
+      }" />
   </mat-grid-tile>
 
   <mat-grid-tile>
-    <ng-container
-      [ngTemplateOutlet]="form"
-      [ngTemplateOutletContext]="{
+    <ng-container [ngTemplateOutlet]="form" [ngTemplateOutletContext]="{
         title: 'Sign Up',
         form: signUpForm,
-      }"
-    />
+        onSubmit: signUp,
+        isInProgress: signUpInProgress()
+      }" />
   </mat-grid-tile>
 </mat-grid-list>
 
-<ng-template #form let-title="title" let-form="form">
-  <form class="w-75" [formGroup]="form">
+<ng-template #form let-title="title" let-form="form" let-onSubmit="onSubmit" let-isInProgress="isInProgress">
+  <form class="w-75 position-relative" [formGroup]="form" (ngSubmit)="onSubmit()">
     <h2 class="text-center">{{ title }}</h2>
 
     <div>
       <mat-form-field class="w-100" appearance="fill">
         <mat-label>Email</mat-label>
 
-        <input
-          formControlName="email"
-          matInput
-          placeholder="Enter your email"
-        />
+        <input formControlName="email" matInput placeholder="Enter your email" />
       </mat-form-field>
     </div>
 
@@ -40,17 +32,16 @@
       <mat-form-field class="w-100" appearance="fill">
         <mat-label>Password</mat-label>
 
-        <input
-          formControlName="password"
-          matInput
-          placeholder="Enter your password"
-        />
+        <input formControlName="password" matInput placeholder="Enter your password" />
       </mat-form-field>
     </div>
 
     <div class="text-center">
-      <button class="w-75" mat-raised-button type="submit"
-      [disabled]="true">Submit</button>
+      <button class="w-75" mat-raised-button type="submit" [disabled]="form.invalid || form.disabled">Submit</button>
     </div>
+
+    @if (isInProgress) {
+      <app-global-loader />
+    }
   </form>
 </ng-template>
