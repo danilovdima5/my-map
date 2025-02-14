@@ -3,6 +3,8 @@
     <ng-container [ngTemplateOutlet]="form" [ngTemplateOutletContext]="{
         title: 'Sign In',
         form: signInForm,
+        onSubmit: signIn,
+        isInProgress: signInInProgress()
       }" />
   </mat-grid-tile>
 

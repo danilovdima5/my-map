@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { Breakpoints } from '@angular/cdk/layout';
 import { finalize, map } from 'rxjs/operators';
@@ -47,7 +47,7 @@ type SigningForm = FormGroup<{
   },
   providers: [AuthPageService]
 })
-export class AuthPageComponent implements OnInit {
+export class AuthPageComponent {
   private readonly layoutService = inject(LayoutService);
 
   private readonly authPageService = inject(AuthPageService);
@@ -56,6 +56,7 @@ export class AuthPageComponent implements OnInit {
 
   private readonly snackBar = inject(MatSnackBar);
 
+  readonly signInInProgress = signal(false);
   readonly signUpInProgress = signal(false);
 
   readonly cols = toSignal(
@@ -77,8 +78,19 @@ export class AuthPageComponent implements OnInit {
   readonly signInForm = AuthPageComponent.getForm();
   readonly signUpForm = AuthPageComponent.getForm();
 
-  ngOnInit(): void {
-    this.signInForm.disable();
+  @bound
+  signIn(): void {
+    const { email, password } = this.signInForm.getRawValue();
+
+    this.signUpInProgress.set(true);
+
+    this.makeRequest(
+      [email, password, 'signIn'],
+      () => {
+        this.signInInProgress.set(false);
+        this.signInForm.reset();
+      },
+    );
   }
 
   @bound
@@ -105,7 +117,7 @@ export class AuthPageComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: () => {
-        this.showSnack('Successfully registered', 'Okay');
+        this.showSnack('Successfully completed', 'Okay');
       },
       error: (error: FirebaseError) => {
         this.showSnack(error.code.split('/')[1].split('-').join(' '), 'Okay');
