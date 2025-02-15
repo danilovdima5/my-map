@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { AuthService } from '@shared/services/auth/auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { AuthActions } from './auth-page.types';
 
 @Injectable()
 export class AuthPageService {
@@ -10,7 +11,7 @@ export class AuthPageService {
   public makeRequest(
     email: string,
     password: string,
-    method: keyof AuthService
+    method: AuthActions
   ): Observable<boolean> {
     return this.authService[method](email, password).pipe(
       map(() => true)

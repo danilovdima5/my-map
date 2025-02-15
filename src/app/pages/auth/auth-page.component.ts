@@ -1,46 +1,31 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatGridList, MatGridTile } from '@angular/material/grid-list';
 import { Breakpoints } from '@angular/cdk/layout';
-import { finalize, map } from 'rxjs/operators';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { LayoutService } from '@shared/services/layout/layout.service';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
 
-import { MatFormField, MatInput, MatLabel } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-
-import { MatButton } from '@angular/material/button';
-import { NgTemplateOutlet } from '@angular/common';
 import { AuthPageService } from './auth-page.service';
-import { bound } from '@shared/helpers/bound/bound';
-import { FirebaseError } from 'firebase/app';
-import { GlobalLoaderComponent } from '@shared/components/global-loader/global-loader.component';
-
-type SigningForm = FormGroup<{
-  email: FormControl<string>;
-  password: FormControl<string>;
-}>;
+import { AuthPageActionComponent } from './action/auth-page-action.component';
 
 @Component({
   selector: 'app-auth-page',
-  templateUrl: './auth-page.component.html',
+  template: `
+    <mat-grid-list [cols]="cols()" rowHeight="fit" class="h-100">
+      <mat-grid-tile>
+        <app-auth-page-action class="w-75" title="Sign In" action="signIn" />
+      </mat-grid-tile>
+
+      <mat-grid-tile>
+        <app-auth-page-action class="w-75" title="Sign Up" action="signUp" />
+      </mat-grid-tile>
+    </mat-grid-list>
+  `,
   imports: [
     MatGridList,
     MatGridTile,
-    ReactiveFormsModule,
-    MatFormField,
-    MatLabel,
-    MatInput,
-    MatButton,
-    NgTemplateOutlet,
-    GlobalLoaderComponent
+    AuthPageActionComponent
   ],
   host: {
     class: 'page',
@@ -49,15 +34,6 @@ type SigningForm = FormGroup<{
 })
 export class AuthPageComponent {
   private readonly layoutService = inject(LayoutService);
-
-  private readonly authPageService = inject(AuthPageService);
-
-  private readonly destroyRef = inject(DestroyRef);
-
-  private readonly snackBar = inject(MatSnackBar);
-
-  readonly signInInProgress = signal(false);
-  readonly signUpInProgress = signal(false);
 
   readonly cols = toSignal(
     this.layoutService.breakpoints$.pipe(
@@ -74,79 +50,4 @@ export class AuthPageComponent {
       })
     )
   );
-
-  readonly signInForm = AuthPageComponent.getForm();
-  readonly signUpForm = AuthPageComponent.getForm();
-
-  @bound
-  signIn(): void {
-    const { email, password } = this.signInForm.getRawValue();
-
-    this.signUpInProgress.set(true);
-
-    this.makeRequest(
-      [email, password, 'signIn'],
-      () => {
-        this.signInInProgress.set(false);
-        this.signInForm.reset();
-      },
-    );
-  }
-
-  @bound
-  signUp(): void {
-    const { email, password } = this.signUpForm.getRawValue();
-
-    this.signUpInProgress.set(true);
-
-    this.makeRequest(
-      [email, password, 'signUp'],
-      () => {
-        this.signUpInProgress.set(false);
-        this.signUpForm.reset();
-      },
-    );
-  }
-
-  private makeRequest(
-    [email, password, method]: Parameters<typeof this.authPageService.makeRequest>,
-    onComplete: () => void
-  ): void {
-    this.authPageService.makeRequest(email, password, method).pipe(
-      finalize(() => onComplete()),
-      takeUntilDestroyed(this.destroyRef),
-    ).subscribe({
-      next: () => {
-        this.showSnack('Successfully completed', 'Okay');
-      },
-      error: (error: FirebaseError) => {
-        this.showSnack(error.code.split('/')[1].split('-').join(' '), 'Okay');
-      }
-    })
-  }
-
-  static getForm(): SigningForm {
-    const fb = inject(FormBuilder);
-
-    const form = fb.group({
-      email: fb.control('', {
-        validators: [Validators.required, Validators.email],
-        nonNullable: true,
-      }),
-      password: fb.control('', {
-        validators: [Validators.required, Validators.minLength(6)],
-        nonNullable: true,
-      }),
-    });
-
-    return form;
-  }
-
-  private showSnack(title: string, button: string): void {
-    this.snackBar.open(title, button, {
-      duration: 5000,
-      verticalPosition: 'bottom',
-      horizontalPosition: 'right'
-    });
-  }
 }
