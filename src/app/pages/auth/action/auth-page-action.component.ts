@@ -10,6 +10,8 @@ import { getAuthForm } from '../auth-page.utils';
 import { MatFormField, MatInput, MatLabel } from '@angular/material/input';
 import { MatButton } from '@angular/material/button';
 import { GlobalLoaderComponent } from '@shared/components/global-loader/global-loader.component';
+import { Router } from '@angular/router';
+import { PAGES_PATHS } from '@pages/paths';
 
 @Component({
   selector: 'app-auth-page-action',
@@ -30,6 +32,8 @@ export class AuthPageActionComponent {
   private readonly authPageService = inject(AuthPageService);
 
   private readonly destroyRef = inject(DestroyRef);
+
+  private readonly router = inject(Router);
 
   private readonly snackBar = inject(MatSnackBar);
 
@@ -59,6 +63,8 @@ export class AuthPageActionComponent {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       next: () => {
+        this.router.navigate([PAGES_PATHS.MAIN]);
+
         this.showSnack(`${this.action()} successfully completed`, 'Okay');
       },
       error: (error: FirebaseError) => {
