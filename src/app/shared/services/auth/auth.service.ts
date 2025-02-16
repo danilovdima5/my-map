@@ -13,14 +13,17 @@ import { from, Observable } from 'rxjs';
 export class AuthService {
   private readonly auth = getAuth();
 
+  private readonly signInFn = signInWithEmailAndPassword;
+  private readonly signUpFn = createUserWithEmailAndPassword;
+
   signIn(email: string, password: string): Observable<UserCredential> {
-    const request = signInWithEmailAndPassword(this.auth, email, password);
+    const request = this.signInFn(this.auth, email, password);
 
     return from(request);
   }
 
   signUp(email: string, password: string): Observable<UserCredential> {
-    const request = createUserWithEmailAndPassword(this.auth, email, password);
+    const request = this.signUpFn(this.auth, email, password);
 
     return from(request);
   }
